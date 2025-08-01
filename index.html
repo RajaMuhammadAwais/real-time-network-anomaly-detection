@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Traffic Anomaly Detection Dashboard</title>
+    <link rel="stylesheet" href="static/style.css">
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Network Traffic Anomaly Detection Dashboard</h1>
+            <div class="status-indicator">
+                <span id="connection-status" class="status-dot offline"></span>
+                <span id="connection-text">Disconnected</span>
+            </div>
+        </header>
+
+        <!-- Control Panel -->
+        <section class="control-panel">
+            <div class="controls">
+                <div class="control-group">
+                    <label for="interface-select">Network Interface:</label>
+                    <select id="interface-select">
+                        <option value="lo">Loopback (lo)</option>
+                        <option value="eth0">Ethernet (eth0)</option>
+                        <option value="wlan0">WiFi (wlan0)</option>
+                    </select>
+                </div>
+                <div class="control-buttons">
+                    <button id="start-monitoring" class="btn btn-primary">Start Monitoring</button>
+                    <button id="stop-monitoring" class="btn btn-secondary" disabled>Stop Monitoring</button>
+                    <button id="retrain-model" class="btn btn-tertiary">Retrain Model</button>
+                </div>
+            </div>
+            <div class="monitoring-status">
+                <div class="status-item">
+                    <span class="label">Status:</span>
+                    <span id="monitoring-status" class="value">Stopped</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">Total Packets:</span>
+                    <span id="total-packets" class="value">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">Total Alerts:</span>
+                    <span id="total-alerts" class="value">0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Dashboard -->
+        <div class="dashboard">
+            <!-- Traffic Overview -->
+            <section class="card">
+                <h2>Real-Time Traffic Overview</h2>
+                <div class="chart-container">
+                    <canvas id="traffic-chart"></canvas>
+                </div>
+            </section>
+
+            <!-- Network Statistics -->
+            <section class="card">
+                <h2>Network Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="packet-count">0</div>
+                        <div class="stat-label">Packets/min</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="unique-ips">0</div>
+                        <div class="stat-label">Unique IPs</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="avg-packet-size">0</div>
+                        <div class="stat-label">Avg Packet Size</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-traffic">0</div>
+                        <div class="stat-label">Total Traffic (KB)</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Protocol Distribution -->
+            <section class="card">
+                <h2>Protocol Distribution</h2>
+                <div class="chart-container">
+                    <canvas id="protocol-chart"></canvas>
+                </div>
+            </section>
+
+            <!-- Anomaly Detection -->
+            <section class="card">
+                <h2>Anomaly Detection Status</h2>
+                <div class="anomaly-status">
+                    <div class="anomaly-indicator">
+                        <div id="anomaly-status" class="status-circle normal"></div>
+                        <div class="anomaly-info">
+                            <div id="anomaly-text" class="anomaly-text">Normal Traffic</div>
+                            <div id="confidence-score" class="confidence-score">Confidence: N/A</div>
+                        </div>
+                    </div>
+                    <div class="threat-level">
+                        <span class="label">Threat Level:</span>
+                        <span id="threat-level" class="threat-badge low">Low</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Alerts -->
+            <section class="card alerts-section">
+                <h2>Recent Alerts</h2>
+                <div id="alerts-container" class="alerts-container">
+                    <div class="no-alerts">No alerts detected</div>
+                </div>
+            </section>
+
+            <!-- Top Source IPs -->
+            <section class="card">
+                <h2>Top Source IPs</h2>
+                <div id="top-ips" class="ip-list">
+                    <div class="no-data">No data available</div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Network Anomaly Detection System</p>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Processing...</div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <script src="static/script.js"></script>
+</body>
+</html>
+

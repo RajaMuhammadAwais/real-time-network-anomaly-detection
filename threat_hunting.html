@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threat Hunting Interface - Network Anomaly Detection</title>
+    <link rel="stylesheet" href="static/style.css">
+    <link rel="stylesheet" href="static/threat_hunting.css">
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Threat Hunting Interface</h1>
+            <nav class="nav-menu">
+                <a href="/" class="nav-link">Dashboard</a>
+                <a href="/threat_hunting.html" class="nav-link active">Threat Hunting</a>
+            </nav>
+        </header>
+
+        <!-- Search Panel -->
+        <section class="search-panel">
+            <h2>Network Log Search</h2>
+            <div class="search-form">
+                <div class="search-row">
+                    <div class="search-field">
+                        <label for="src-ip">Source IP:</label>
+                        <input type="text" id="src-ip" placeholder="192.168.1.1">
+                    </div>
+                    <div class="search-field">
+                        <label for="dst-ip">Destination IP:</label>
+                        <input type="text" id="dst-ip" placeholder="10.0.0.1">
+                    </div>
+                    <div class="search-field">
+                        <label for="protocol">Protocol:</label>
+                        <select id="protocol">
+                            <option value="">All</option>
+                            <option value="TCP">TCP</option>
+                            <option value="UDP">UDP</option>
+                            <option value="ICMP">ICMP</option>
+                        </select>
+                    </div>
+                    <div class="search-field">
+                        <label for="port">Port:</label>
+                        <input type="number" id="port" placeholder="80">
+                    </div>
+                </div>
+                
+                <div class="search-row">
+                    <div class="search-field">
+                        <label for="attack-type">Attack Type:</label>
+                        <select id="attack-type">
+                            <option value="">All</option>
+                            <option value="normal">Normal</option>
+                            <option value="dos">DoS</option>
+                            <option value="port_scan">Port Scan</option>
+                            <option value="apt">APT</option>
+                            <option value="sql_injection">SQL Injection</option>
+                            <option value="xss">XSS</option>
+                            <option value="botnet">Botnet</option>
+                        </select>
+                    </div>
+                    <div class="search-field">
+                        <label for="start-time">Start Time:</label>
+                        <input type="datetime-local" id="start-time">
+                    </div>
+                    <div class="search-field">
+                        <label for="end-time">End Time:</label>
+                        <input type="datetime-local" id="end-time">
+                    </div>
+                    <div class="search-field">
+                        <label for="threat-score">Min Threat Score:</label>
+                        <input type="number" id="threat-score" min="0" max="1" step="0.1" placeholder="0.5">
+                    </div>
+                </div>
+                
+                <div class="search-actions">
+                    <button id="search-btn" class="btn btn-primary">Search Logs</button>
+                    <button id="clear-btn" class="btn btn-secondary">Clear Filters</button>
+                    <button id="export-btn" class="btn btn-tertiary">Export Results</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- IOC Checker -->
+        <section class="ioc-checker">
+            <h2>IOC (Indicator of Compromise) Checker</h2>
+            <div class="ioc-form">
+                <div class="ioc-input">
+                    <input type="text" id="ioc-value" placeholder="Enter IP, domain, URL, or hash">
+                    <select id="ioc-type">
+                        <option value="auto">Auto-detect</option>
+                        <option value="ip">IP Address</option>
+                        <option value="domain">Domain</option>
+                        <option value="url">URL</option>
+                        <option value="md5">MD5 Hash</option>
+                        <option value="sha1">SHA1 Hash</option>
+                        <option value="sha256">SHA256 Hash</option>
+                    </select>
+                    <button id="check-ioc-btn" class="btn btn-primary">Check IOC</button>
+                </div>
+                <div id="ioc-result" class="ioc-result"></div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <div class="results-section">
+            <!-- Search Results -->
+            <section class="card results-card">
+                <h2>Search Results</h2>
+                <div class="results-header">
+                    <span id="results-count">0 results found</span>
+                    <div class="results-controls">
+                        <select id="results-per-page">
+                            <option value="25">25 per page</option>
+                            <option value="50">50 per page</option>
+                            <option value="100">100 per page</option>
+                        </select>
+                        <button id="prev-page" class="btn btn-small">Previous</button>
+                        <span id="page-info">Page 1 of 1</span>
+                        <button id="next-page" class="btn btn-small">Next</button>
+                    </div>
+                </div>
+                <div class="results-table-container">
+                    <table id="results-table" class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Source IP</th>
+                                <th>Dest IP</th>
+                                <th>Protocol</th>
+                                <th>Ports</th>
+                                <th>Attack Type</th>
+                                <th>Threat Score</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-tbody">
+                            <tr>
+                                <td colspan="8" class="no-results">No results to display. Use the search form above to find network logs.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Statistics Panel -->
+            <section class="card stats-panel">
+                <h2>Search Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-events">0</div>
+                        <div class="stat-label">Total Events</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="unique-sources">0</div>
+                        <div class="stat-label">Unique Sources</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="threats-found">0</div>
+                        <div class="stat-label">Threats Found</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="avg-threat-score">0.0</div>
+                        <div class="stat-label">Avg Threat Score</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Alerts Section -->
+        <section class="card alerts-section">
+            <h2>Recent Security Alerts</h2>
+            <div class="alerts-controls">
+                <button id="refresh-alerts" class="btn btn-primary">Refresh Alerts</button>
+                <label>
+                    <input type="checkbox" id="show-investigated"> Show Investigated
+                </label>
+            </div>
+            <div id="alerts-container" class="alerts-container">
+                <div class="no-alerts">Loading alerts...</div>
+            </div>
+        </section>
+
+        <!-- Threat Intelligence Panel -->
+        <section class="card threat-intel-panel">
+            <h2>Threat Intelligence</h2>
+            <div class="intel-controls">
+                <button id="update-intel" class="btn btn-primary">Update Intelligence</button>
+                <span id="last-update">Last update: Never</span>
+            </div>
+            <div class="intel-stats">
+                <div class="intel-stat">
+                    <span class="intel-label">Malware Domains:</span>
+                    <span id="malware-count" class="intel-value">0</span>
+                </div>
+                <div class="intel-stat">
+                    <span class="intel-label">Phishing Domains:</span>
+                    <span id="phishing-count" class="intel-value">0</span>
+                </div>
+                <div class="intel-stat">
+                    <span class="intel-label">Tor Exit Nodes:</span>
+                    <span id="tor-count" class="intel-value">0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Detail Modal -->
+        <div id="detail-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Event Details</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div id="event-details"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Network Anomaly Detection System - Threat Hunting Interface</p>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Processing...</div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <script src="static/threat_hunting.js"></script>
+</body>
+</html>
+
