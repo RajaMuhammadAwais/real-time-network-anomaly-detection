@@ -44,7 +44,7 @@ The system consists of three main components:
 
 ```bash
 # If you have the project files, navigate to the project directory
-cd network_anomaly_detector
+cd to project
 ```
 
 ### 2. Create Virtual Environment
