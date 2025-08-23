@@ -53,20 +53,22 @@ jobs:
           mkdir -p docs
           echo "## Author" > docs/AUTHORS.md
           echo "- Raja Muhammad Awais" >> docs/AUTHORS.md
-          grep -q "## Author" README.md || echo -e "\n## Author\nRaja Muhammad Awais" >> README.md
+
+          if ! grep -q "## Author" README.md; then
+            echo -e "\n## Author\nRaja Muhammad Awais" >> README.md
+          fi
 
       # -------------------------
       # Update License
       # -------------------------
       - name: Update LICENSE with Author
         run: |
+          year=$(date +'%Y')
           if [ -f LICENSE ]; then
-            year=$(date +'%Y')
             if ! grep -q "Raja Muhammad Awais" LICENSE; then
               sed -i "s/Copyright (c) .*/Copyright (c) $year Raja Muhammad Awais/" LICENSE || true
             fi
           else
-            year=$(date +'%Y')
             echo "MIT License" > LICENSE
             echo "" >> LICENSE
             echo "Copyright (c) $year Raja Muhammad Awais" >> LICENSE
@@ -92,12 +94,12 @@ jobs:
           commit_message: "🤖 CI Bot: fixes, license, author update"
           branch: ci-bot/update
           create_branch: true
-          push_options: --force
 
       # -------------------------
       # Create Pull Request into main
       # -------------------------
       - name: Create Pull Request
+        id: pr
         uses: peter-evans/create-pull-request@v6
         with:
           branch: ci-bot/update
@@ -117,9 +119,4 @@ jobs:
       # -------------------------
       # Auto-merge (optional)
       # -------------------------
-      - name: Auto Merge PR
-        if: success()
-        uses: peter-evans/enable-pull-request-automerge@v3
-        with:
-          pull-request-number: ${{ steps.create_pull_request.outputs.pull-request-number }}
-          merge-method: squash
+     
