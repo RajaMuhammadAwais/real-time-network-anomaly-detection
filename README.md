@@ -1,5 +1,5 @@
 <!-- badges:start -->
-
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Python](https://img.shields.io/badge/Python-3.11-blue.svg)
 ![Version](https://img.shields.io/badge/Version-0.0.1-blue.svg)
