@@ -112,11 +112,7 @@ jobs:
             - 📜 Author/License updated (Raja Muhammad Awais)
             - ⚡ Auto-fixes applied where possible
 
-            Please review before merging.
+            ---
+            ✅ CLA signed automatically by Raja Muhammad Awais
           labels: bot, automated-pr
           base: main
-
-      # -------------------------
-      # Auto-merge (optional)
-      # -------------------------
-     
