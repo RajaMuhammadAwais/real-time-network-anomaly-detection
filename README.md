@@ -1,10 +1,10 @@
+# Network Traffic Anomaly Detection with Real-Time Dashboard
 <!-- badges:start -->
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Python](https://img.shields.io/badge/Python-3.11-blue.svg)
 ![Version](https://img.shields.io/badge/Version-0.0.1-blue.svg)
 <!-- badges:end -->
-# Network Traffic Anomaly Detection with Real-Time Dashboard
 
 A comprehensive network security monitoring system that captures real-time network traffic, detects anomalies using machine learning, and provides a web-based dashboard for visualization and alerting.
 
