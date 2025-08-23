@@ -1,0 +1,181 @@
+name: CI Bot - Build, Test, Report, Release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install flake8 pytest black
+
+      - name: Run Lint Check
+        id: lint
+        run: flake8 backend tests
+
+      - name: Run Tests
+        id: tests
+        run: pytest --maxfail=1 --disable-warnings -q
+
+      - name: Check Build (syntax)
+        id: build
+        run: python -m py_compile backend/*.py
+
+      # -------------------------
+      # Version bump + badges
+      # -------------------------
+      - name: Ensure VERSION file exists and bump version
+        id: version
+        if: success()
+        run: |
+          if [ ! -f VERSION ]; then
+            echo "0.0.0" > VERSION
+          fi
+          current=$(cat VERSION)
+          IFS='.' read -r major minor patch <<< "$current"
+          patch=$((patch+1))
+          new_version="$major.$minor.$patch"
+          echo "$new_version" > VERSION
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
+      - name: Generate Badges
+        if: success()
+        run: |
+          echo "![Build](https://github.com/${{ github.repository }}/actions/workflows/ci-bot.yml/badge.svg)" > badges.md
+          echo "![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)" >> badges.md
+          echo "![Python](https://img.shields.io/badge/Python-3.11-blue.svg)" >> badges.md
+          echo "![Version](https://img.shields.io/badge/Version-${{ steps.version.outputs.new_version }}-blue.svg)" >> badges.md
+
+      - name: Update README with badges
+        if: success()
+        run: |
+          sed -i '/<!-- badges:start -->/,/<!-- badges:end -->/d' README.md || true
+          (echo "<!-- badges:start -->"; cat badges.md; echo "<!-- badges:end -->"; cat README.md) > README_new.md
+          mv README_new.md README.md
+
+      # -------------------------
+      # Add Author & License Info
+      # -------------------------
+      - name: Add Author Info
+        if: success()
+        run: |
+          mkdir -p docs
+          echo "## Author" > docs/AUTHORS.md
+          echo "- Raja Muhammad Awais" >> docs/AUTHORS.md
+          grep -q "## Author" README.md || echo -e "\n## Author\nRaja Muhammad Awais" >> README.md
+
+      - name: Update LICENSE with Author
+        if: success()
+        run: |
+          if [ -f LICENSE ]; then
+            year=$(date +'%Y')
+            if ! grep -q "Raja Muhammad Awais" LICENSE; then
+              sed -i "s/Copyright (c) .*/Copyright (c) $year Raja Muhammad Awais/" LICENSE || true
+            fi
+          else
+            year=$(date +'%Y')
+            echo "MIT License" > LICENSE
+            echo "" >> LICENSE
+            echo "Copyright (c) $year Raja Muhammad Awais" >> LICENSE
+            echo "" >> LICENSE
+            curl -s https://opensource.org/licenses/MIT | sed -n '/Permission is hereby granted/,/SOFTWARE./p' >> LICENSE
+          fi
+
+      - name: Commit version + badges + author + license
+        if: success()
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🤖 Auto CI: bump version, update badges, add author & license"
+          branch: main
+
+      # -------------------------
+      # Auto Fix on Failures
+      # -------------------------
+      - name: Try Auto-Fix (format + lint)
+        if: failure()
+        run: |
+          echo "⚡ Attempting to auto-fix issues..."
+          black backend tests || true
+          flake8 backend tests || true
+
+      - name: Commit Auto-Fixes
+        if: failure()
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🤖 Auto CI: applied auto-fixes"
+          branch: main
+
+      # -------------------------
+      # Generate Changelog
+      # -------------------------
+      - name: Generate Changelog
+        id: changelog
+        if: success()
+        run: |
+          last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$last_tag" ]; then
+            git log --pretty=format:"- %s (%h)" > CHANGELOG.md
+          else
+            git log $last_tag..HEAD --pretty=format:"- %s (%h)" > CHANGELOG.md
+          fi
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat CHANGELOG.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # -------------------------
+      # Create GitHub Release
+      # -------------------------
+      - name: Create GitHub Release
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.new_version }}
+          name: "Release v${{ steps.version.outputs.new_version }}"
+          body: |
+            🚀 Automated release by CI Bot
+            - Version: v${{ steps.version.outputs.new_version }}
+            - Build, tests, and checks passed ✅
+
+            ## Changes
+            ${{ steps.changelog.outputs.changelog }}
+
+            ## Author
+            Raja Muhammad Awais
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # -------------------------
+      # Report Issues if failed
+      # -------------------------
+      - name: Generate CI Report
+        if: failure()
+        run: |
+          echo "## CI Report" > ci-report.md
+          echo "- ❌ One or more CI steps failed, auto-fix may not have resolved all issues." >> ci-report.md
+          echo "- Please check logs: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> ci-report.md
+
+      - name: Report Issues if Failed
+        if: failure()
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: "⚠️ CI Check Failed"
+          content-filepath: ./ci-report.md
+          labels: bug, automated-report
