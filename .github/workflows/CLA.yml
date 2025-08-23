@@ -1,0 +1,19 @@
+name: "CLA Assistant"
+
+on:
+  pull_request_target:
+    types: [opened, synchronize]
+
+jobs:
+  cla-assistant:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "CLA Assistant"
+        uses: cla-assistant/github-action@v2.1.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.PAT_TOKEN }}
+        with:
+          path-to-signatures: "signatures/cla.json"
+          path-to-document: "https://yourdomain.com/cla" # 👉 link to your CLA markdown/pdf
+          allowlist: user1, user2, bot*
