@@ -45,6 +45,11 @@ class NetworkMonitor:
         self.alerts = []
         self.max_alerts = 100
         
-    def start_monitoring(self, interface='lo'):
-        """Start network monitoring"""
-        if self.is_running:
+    def start_monitoring(self, interface='lo'): 
+    """Start network monitoring"""
+    if self.is_running:
+        return  # prevent starting twice
+
+    self.is_running = True
+    self.interface = interface
+    # your capture/monitoring logic here
