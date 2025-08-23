@@ -1,4 +1,4 @@
-name: Badge & License Bot
+name: Docs + Version Bot
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  badges-license:
+  update-docs-and-version:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,101 +23,106 @@ jobs:
       - name: Install dependencies
         run: pip install openai pyyaml
 
-      - name: Ensure LICENSE file (MIT)
-        run: |
-          if [ ! -f LICENSE ]; then
-            cat > LICENSE << 'EOF'
-MIT License
-
-Copyright (c) $(date +%Y) ${{ github.repository_owner }}
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-EOF
-          fi
-
-      - name: Update README with OpenAI
+      - name: Update version + docs with OpenAI
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_REPO: ${{ github.repository }}
         run: |
           python - <<'PYCODE'
-import os, glob, yaml
+import os, re, glob, yaml
 from openai import OpenAI
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 repo = os.getenv("GITHUB_REPO")
 
-# Collect workflows
-badges = []
+# --- Step 1: Manage VERSION file ---
+version_file = "VERSION"
+if os.path.exists(version_file):
+    with open(version_file, "r") as f:
+        current_version = f.read().strip()
+else:
+    current_version = "0.0.0"
+
+# bump patch version (X.Y.Z → X.Y.(Z+1))
+major, minor, patch = map(int, current_version.split("."))
+new_version = f"{major}.{minor}.{patch+1}"
+
+with open(version_file, "w") as f:
+    f.write(new_version)
+
+# --- Step 2: Collect workflow badges ---
+badges, cla_required = [], False
 for path in glob.glob(".github/workflows/*.yml"):
     with open(path, "r", encoding="utf-8") as f:
         try:
             wf = yaml.safe_load(f)
         except Exception:
             continue
-    if not wf or "name" not in wf: 
+    if not wf or "name" not in wf:
         continue
-    workflow_name = wf["name"]
+    name = wf["name"]
     badge_url = f"https://github.com/{repo}/actions/workflows/{os.path.basename(path)}/badge.svg"
     wf_url = f"https://github.com/{repo}/actions/workflows/{os.path.basename(path)}"
-    badges.append(f"[![{workflow_name}]({badge_url})]({wf_url})")
+    badges.append(f"[![{name}]({badge_url})]({wf_url})")
+    if "cla" in path.lower():
+        cla_required = True
 
-# Add extra static badges
+# version + license badges
+badges.append(f"![Version](https://img.shields.io/badge/version-{new_version}-blue.svg)")
 badges.append("[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)")
-badges.append("[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)")
 
 badges_block = "\n".join(badges)
 
-# Read README
+# --- Step 3: Update README.md ---
 with open("README.md", "r", encoding="utf-8") as f:
-    readme_content = f.read()
+    content = f.read()
 
-prompt = f"""
-Update this README.md:
-
-1. Insert the following badges inside a block delimited by <!-- badges:start --> and <!-- badges:end --> at the top:
+prompt_readme = f"""
+Insert or update these badges in README.md between <!-- badges:start --> and <!-- badges:end -->:
 
 {badges_block}
 
-2. Ensure a "License" section exists at the bottom with a link to the LICENSE file.
-3. Keep everything else unchanged.
-
+Also ensure a "License" section exists linking to LICENSE.
+Do not change any other content.
 README content:
-{readme_content}
+{content}
 """
 
 response = client.chat.completions.create(
     model="gpt-4o-mini",
-    messages=[{"role": "user", "content": prompt}],
+    messages=[{"role": "user", "content": prompt_readme}],
     temperature=0
 )
-
 updated_readme = response.choices[0].message.content
-
 with open("README.md", "w", encoding="utf-8") as f:
     f.write(updated_readme)
 
-print("README.md updated with badges & license.")
+# --- Step 4: CONTRIBUTING.md if missing ---
+if not os.path.exists("CONTRIBUTING.md"):
+    prompt_contrib = f"""
+Generate a CONTRIBUTING.md for {repo}.
+Include:
+- Fork → branch → PR process
+- Running tests before submitting
+- Reference LICENSE (MIT)
+- Filing issues via GitHub
+"""
+    if cla_required:
+        prompt_contrib += "\nAlso mention contributors must sign a CLA before merging PRs."
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt_contrib}],
+        temperature=0
+    )
+    with open("CONTRIBUTING.md", "w", encoding="utf-8") as f:
+        f.write(response.choices[0].message.content)
+
+print(f"✅ Docs updated, new version {new_version}")
 PYCODE
 
-      - name: Commit changes
+      - name: Commit docs + version bump
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "🤖 Auto-update README with badges & license"
+          commit_message: "🤖 Auto-update docs & bump version"
           branch: main
