@@ -1,0 +1,82 @@
+# -----------------------------
+# Python
+# -----------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+*.egg-info/
+*.egg
+*.log
+*.sqlite3
+
+# Virtual environments
+.env
+.venv
+venv/
+ENV/
+env.bak/
+.envrc
+*.env
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# -----------------------------
+# Flask / Frontend
+# -----------------------------
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# Frontend build artifacts
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/.cache/
+*.lock
+*.tmp
+*.map
+
+# -----------------------------
+# Tests
+# -----------------------------
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+
+# -----------------------------
+# CI/CD & IDE
+# -----------------------------
+*.swp
+*.swo
+*.bak
+*.orig
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# -----------------------------
+# OS Generated
+# -----------------------------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# -----------------------------
+# Project Specific
+# -----------------------------
+# Ignore generated docs if built locally
+docs/_build/
+docs/build/
+
+# Ignore compiled migrations or temp data
+migrations/
+tmp/
