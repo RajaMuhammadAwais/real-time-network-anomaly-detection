@@ -1,0 +1,37 @@
+name: Badge Updater Bot
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  badges:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate Badges
+        run: |
+          echo "![Build](https://github.com/${{ github.repository }}/actions/workflows/build.yml/badge.svg)" > badges.md
+          echo "![Tests](https://github.com/${{ github.repository }}/actions/workflows/test.yml/badge.svg)" >> badges.md
+          echo "![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)" >> badges.md
+          echo "![Python](https://img.shields.io/badge/Python-3.11-blue.svg)" >> badges.md
+
+      - name: Update README with badges
+        run: |
+          # Remove old badge block between <!-- badges:start --> and <!-- badges:end -->
+          sed -i '/<!-- badges:start -->/,/<!-- badges:end -->/d' README.md
+          # Insert new badges at top of README
+          (echo "<!-- badges:start -->"; cat badges.md; echo "<!-- badges:end -->"; cat README.md) > README_new.md
+          mv README_new.md README.md
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🤖 Auto-update badges in README"
+          branch: main
