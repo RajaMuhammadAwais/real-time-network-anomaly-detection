@@ -1,5 +1,5 @@
 Flask==3.1.1
-Flask-SocketIO==5.5.1
+Flask-SocketIO
 Flask-CORS==6.0.1
 tensorflow==2.19.0
 keras==3.11.0
@@ -12,6 +12,6 @@ dpkt==1.9.8
 requests==2.32.4
 dnspython==2.7.0
 joblib==1.5.1
-python-socketio==5.11.4
+python-socketio
 eventlet==0.37.0
 
