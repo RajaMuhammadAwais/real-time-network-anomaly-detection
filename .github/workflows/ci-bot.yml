@@ -88,6 +88,11 @@ jobs:
       # -------------------------
       # Commit changes into bot branch
       # -------------------------
+      - name: Reset bot branch
+        run: |
+          git fetch origin
+          git checkout -B ci-bot/update origin/main
+
       - name: Commit changes to ci-bot branch
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
