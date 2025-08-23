@@ -1,4 +1,4 @@
-name: Badge Updater Bot
+name: Badge & License Bot
 
 on:
   push:
@@ -8,30 +8,116 @@ on:
   workflow_dispatch:
 
 jobs:
-  badges:
+  badges-license:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Generate Badges
-        run: |
-          echo "![Build](https://github.com/${{ github.repository }}/actions/workflows/build.yml/badge.svg)" > badges.md
-          echo "![Tests](https://github.com/${{ github.repository }}/actions/workflows/test.yml/badge.svg)" >> badges.md
-          echo "![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)" >> badges.md
-          echo "![Python](https://img.shields.io/badge/Python-3.11-blue.svg)" >> badges.md
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-      - name: Update README with badges
+      - name: Install dependencies
+        run: pip install openai pyyaml
+
+      - name: Ensure LICENSE file (MIT)
         run: |
-          # Remove old badge block between <!-- badges:start --> and <!-- badges:end -->
-          sed -i '/<!-- badges:start -->/,/<!-- badges:end -->/d' README.md
-          # Insert new badges at top of README
-          (echo "<!-- badges:start -->"; cat badges.md; echo "<!-- badges:end -->"; cat README.md) > README_new.md
-          mv README_new.md README.md
+          if [ ! -f LICENSE ]; then
+            cat > LICENSE << 'EOF'
+MIT License
+
+Copyright (c) $(date +%Y) ${{ github.repository_owner }}
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+EOF
+          fi
+
+      - name: Update README with OpenAI
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_REPO: ${{ github.repository }}
+        run: |
+          python - <<'PYCODE'
+import os, glob, yaml
+from openai import OpenAI
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+repo = os.getenv("GITHUB_REPO")
+
+# Collect workflows
+badges = []
+for path in glob.glob(".github/workflows/*.yml"):
+    with open(path, "r", encoding="utf-8") as f:
+        try:
+            wf = yaml.safe_load(f)
+        except Exception:
+            continue
+    if not wf or "name" not in wf: 
+        continue
+    workflow_name = wf["name"]
+    badge_url = f"https://github.com/{repo}/actions/workflows/{os.path.basename(path)}/badge.svg"
+    wf_url = f"https://github.com/{repo}/actions/workflows/{os.path.basename(path)}"
+    badges.append(f"[![{workflow_name}]({badge_url})]({wf_url})")
+
+# Add extra static badges
+badges.append("[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)")
+badges.append("[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)")
+
+badges_block = "\n".join(badges)
+
+# Read README
+with open("README.md", "r", encoding="utf-8") as f:
+    readme_content = f.read()
+
+prompt = f"""
+Update this README.md:
+
+1. Insert the following badges inside a block delimited by <!-- badges:start --> and <!-- badges:end --> at the top:
+
+{badges_block}
+
+2. Ensure a "License" section exists at the bottom with a link to the LICENSE file.
+3. Keep everything else unchanged.
+
+README content:
+{readme_content}
+"""
+
+response = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": prompt}],
+    temperature=0
+)
+
+updated_readme = response.choices[0].message.content
+
+with open("README.md", "w", encoding="utf-8") as f:
+    f.write(updated_readme)
+
+print("README.md updated with badges & license.")
+PYCODE
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "🤖 Auto-update badges in README"
+          commit_message: "🤖 Auto-update README with badges & license"
           branch: main
