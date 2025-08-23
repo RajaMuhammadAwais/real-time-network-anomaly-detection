@@ -99,7 +99,7 @@ jobs:
           commit_message: "🤖 CI Bot: fixes, license, author update"
           branch: ci-bot/update
           create_branch: true
-
+          push_options: --force
       # -------------------------
       # Create Pull Request into main
       # -------------------------
