@@ -89,7 +89,7 @@ README content:
 """
 
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-3.5-turbo",
     messages=[{"role": "user", "content": prompt_readme}],
     temperature=0
 )
@@ -111,7 +111,7 @@ Include:
         prompt_contrib += "\nAlso mention contributors must sign a CLA before merging PRs."
 
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt_contrib}],
         temperature=0
     )
