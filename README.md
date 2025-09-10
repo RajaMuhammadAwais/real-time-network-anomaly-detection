@@ -364,7 +364,7 @@ This project is open source and available under the MIT License.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit pull requests or open issues for bugs and feature requests.
+Contributions are welcome! Please read CONTRIBUTING.md before you start. By opening a pull request, first-time contributors will be asked to sign a CLA via the CLA Assistant bot. See CODE_OF_CONDUCT.md for community behavior expectations.
 
 ## 📞 Support
 
