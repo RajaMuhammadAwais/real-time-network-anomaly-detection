@@ -132,4 +132,5 @@ if __name__ == "__main__":
         print("Stopping capture...")
     finally:
         capture.stop_capture()
+# End of file
 

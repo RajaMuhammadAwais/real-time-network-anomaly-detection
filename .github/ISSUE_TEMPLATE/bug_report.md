@@ -5,25 +5,31 @@ labels: bug
 ---
 
 ## Describe the bug
+
 A clear and concise description of what the bug is.
 
 ## To Reproduce
+
 Steps to reproduce the behavior:
-1.
-2.
-3.
+1. Go to '...'
+2. Run '...'
+3. Observe '...'
 
 ## Expected behavior
+
 A clear and concise description of what you expected to happen.
 
-## Screenshots / Logs
-If applicable, add screenshots or logs to help explain your problem.
+## Logs and screenshots
+
+Paste relevant logs, stack traces, or screenshots.
 
 ## Environment
-- OS: (e.g., Ubuntu 22.04, macOS 14)
-- Python: (e.g., 3.11.x)
-- Run mode: local venv / Docker
-- Branch/commit:
+
+- OS:
+- Python version:
+- Docker version (if applicable):
+- Browser:
 
 ## Additional context
+
 Add any other context about the problem here.

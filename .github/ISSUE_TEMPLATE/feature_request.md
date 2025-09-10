@@ -4,18 +4,18 @@ about: Suggest an idea for this project
 labels: enhancement
 ---
 
-## Is your feature request related to a problem?
-A clear and concise description of the problem.
+## Problem statement
 
-## Describe the solution you'd like
-A clear and concise description of what you want to happen.
+What problem would this feature solve? Who benefits?
 
-## Describe alternatives you've considered
-A clear and concise description of any alternative solutions or features you've considered.
+## Proposed solution
+
+Describe your idea. Include any API/UI changes, data models, or workflows.
+
+## Alternatives considered
+
+List alternative solutions or workarounds you’ve considered.
 
 ## Additional context
-Add any other context, mockups, or screenshots about the feature request here.
 
-## Impact
-- Affected components (backend/frontend/CI/docs):
-- Breaking change? yes/no
+Add any other context, mockups, or references here.

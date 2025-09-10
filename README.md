@@ -364,7 +364,8 @@ This project is open source and available under the MIT License.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read CONTRIBUTING.md before you start. By opening a pull request, first-time contributors will be asked to sign a CLA via the CLA Assistant bot. See CODE_OF_CONDUCT.md for community behavior expectations.
+We welcome contributions from developers, data scientists, security researchers, and DevOps engineers. Please read the full guidelines in [CONTRIBUTING.md](CONTRIBUTING.md) before opening an issue or pull request.
+
 
 ## 📞 Support
 

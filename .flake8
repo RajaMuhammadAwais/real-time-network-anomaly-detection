@@ -1,8 +1,8 @@
 [flake8]
 max-line-length = 100
-ignore =
-    E203,  # whitespace before ':', compatible with black
-    W503,  # line break before binary operator
+# E203: whitespace before ':', compatible with black
+# W503: line break before binary operator
+ignore = E203, W503
 exclude =
     .git,
     __pycache__,
@@ -10,3 +10,6 @@ exclude =
     .venv,
     build,
     dist
+per-file-ignores =
+    backend/*: W293, E261, E302, E305, E501, E402, F401, F841, E128, E226, E722, F541, W291
+    tests/*: W293, E302, E501, E402

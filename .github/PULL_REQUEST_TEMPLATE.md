@@ -2,17 +2,24 @@
 
 Describe the purpose of this PR and the problem it solves.
 
-## Type of change
-
-- [ ] Bug fix
-- [ ] Feature
-- [ ] Documentation
-- [ ] Chore/Refactor
-- [ ] CI/CD
-
 ## Related issues
 
 Closes #
+
+Describe the change and the problem it solves.
+
+Fixes # (issue)
+
+## Type of change
+
+- [ ] feat: New feature
+- [ ] fix: Bug fix
+- [ ] docs: Documentation only
+- [ ] refactor: Code change that neither fixes a bug nor adds a feature
+- [ ] perf: Performance improvement
+- [ ] test: Adds or fixes tests
+- [ ] ci: CI/CD or tooling change
+- [ ] chore: Other maintenance
 
 ## How has this been tested?
 
@@ -25,9 +32,19 @@ Closes #
 
 Paste relevant output or screenshots.
 
+
 ## Checklist
 
-- [ ] I ran `make fmt && make lint && make test`
-- [ ] I updated documentation (README/docs) where needed
-- [ ] I followed the existing code style and patterns
-- [ ] I signed the CLA (first-time contributors only)
+- [ ] I ran pre-commit locally (black, isort, flake8, whitespace)
+- [ ] I added/updated tests and they pass (make test)
+- [ ] I updated documentation (README/docs) as needed
+- [ ] I considered performance and security implications
+- [ ] I updated VERSION or proposed a bump if user-facing changes
+
+## Screenshots or logs (if applicable)
+
+Paste images or logs that help reviewers.
+
+## Breaking changes (if any)
+
+Describe the impact and migration steps.

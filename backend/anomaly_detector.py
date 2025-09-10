@@ -243,4 +243,5 @@ if __name__ == "__main__":
     anomaly_features = np.array([500, 2, 50, 100, 50, 25000, 0.9, 0.08, 0.02, 0.01, 0.005, 100, 2])
     result = detector.predict(anomaly_features)
     print("Anomalous traffic prediction:", result)
+# End of file
 

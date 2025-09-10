@@ -118,7 +118,6 @@ class EnhancedNetworkMonitor:
     
     def _monitoring_loop(self, interface):
         """Enhanced monitoring loop with all detection capabilities"""
-        global packet_buffer, sequence_buffer, current_stats
         
         try:
             # Initialize LSTM detector if not already trained
@@ -339,7 +338,6 @@ class EnhancedNetworkMonitor:
     
     def _update_statistics(self, packet_data, analysis):
         """Update global statistics"""
-        global current_stats
         
         current_stats['total_packets'] += 1
         current_stats['last_update'] = datetime.now().isoformat()
@@ -466,7 +464,6 @@ def stop_monitoring():
 @app.route('/api/status')
 def get_status():
     """Get current monitoring status and statistics"""
-    global current_stats, monitoring_active
     
     status = {
         'monitoring_active': monitoring_active,
@@ -606,4 +603,5 @@ if __name__ == '__main__':
     
     # Start the application
     socketio.run(app, host='0.0.0.0', port=5000, debug=False, allow_unsafe_werkzeug=True)
+# End of file
 

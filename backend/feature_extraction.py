@@ -214,4 +214,5 @@ if __name__ == "__main__":
     feature_vector = extractor.create_feature_vector(features)
     print(f"\nFeature Vector: {feature_vector}")
     print(f"Feature Vector Shape: {feature_vector.shape}")
+# End of file
 
