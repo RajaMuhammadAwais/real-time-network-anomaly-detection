@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: network-anomaly-backend:latest
+    container_name: nad-backend
+    environment:
+      - TF_ENABLE_ONEDNN_OPTS=0
+      - TF_CPP_MIN_LOG_LEVEL=2
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./logs:/app/logs
+    # Packet capture may need NET_ADMIN and CAP_NET_RAW if real capture is enabled
+    # Uncomment if you enable real packet capture inside container:
+    # cap_add:
+    #   - NET_ADMIN
+    #   - NET_RAW
+    command: ["python", "-u", "backend/enhanced_app.py"]
