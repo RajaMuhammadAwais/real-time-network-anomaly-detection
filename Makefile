@@ -1,7 +1,7 @@
 PY := python3.11
 PIP := $(PY) -m pip
 
-.PHONY: help install venv lint fmt test run run-enhanced docker-build docker-up docker-down pre-commit
+.PHONY: help install venv lint fmt test run run-enhanced docker-build docker-up docker-down pre-commit push-branch
 
 help:
 	@echo "Targets:"
@@ -16,6 +16,7 @@ help:
 	@echo "  docker-up       Start with docker-compose"
 	@echo "  docker-down     Stop docker-compose"
 	@echo "  pre-commit      Install git pre-commit hooks"
+	@echo "  push-branch     Commit current changes and push a new PR branch"
 
 venv:
 	@test -d venv || $(PY) -m venv venv
@@ -52,3 +53,6 @@ docker-down:
 pre-commit:
 	@. venv/bin/activate; $(PIP) install pre-commit
 	@. venv/bin/activate; pre-commit install
+
+push-branch:
+	@bash scripts/push_pr_branch.sh
