@@ -1,5 +1,11 @@
 ## Summary
 
+Describe the purpose of this PR and the problem it solves.
+
+## Related issues
+
+Closes #
+
 Describe the change and the problem it solves.
 
 Fixes # (issue)
@@ -18,8 +24,14 @@ Fixes # (issue)
 ## How has this been tested?
 
 - [ ] Unit tests added/updated
-- [ ] Manual testing (describe steps)
-- [ ] Other (describe)
+- [ ] Manual testing
+- [ ] Docker run `docker compose up`
+- [ ] Other:
+
+## Screenshots / Logs (if applicable)
+
+Paste relevant output or screenshots.
+
 
 ## Checklist
 

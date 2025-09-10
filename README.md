@@ -366,6 +366,7 @@ This project is open source and available under the MIT License.
 
 We welcome contributions from developers, data scientists, security researchers, and DevOps engineers. Please read the full guidelines in [CONTRIBUTING.md](CONTRIBUTING.md) before opening an issue or pull request.
 
+
 ## 📞 Support
 
 For support and questions:
