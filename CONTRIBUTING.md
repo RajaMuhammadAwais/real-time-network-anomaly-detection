@@ -9,7 +9,7 @@ Thank you for your interest in contributing! This project brings together networ
 - Make targets: see Makefile
 - CI: via pre-commit hooks locally (you can mirror these in your CI system)
 
-If anything is unclear, open an issue and we’ll help.
+If anything is unclear, open an issue and we’ll help. Please also review our [Code of Conduct](CODE_OF_CONDUCT.md) and [Security Policy](SECURITY.md) before contributing.
 
 ## Table of contents
 
@@ -18,12 +18,18 @@ If anything is unclear, open an issue and we’ll help.
 - Testing
 - Code style and formatting
 - Commit messages and branching
+- Pull request process and review checklist
+- Documentation style
+- Performance and scalability guidelines
+- Dependency management policy
 - Versioning and releases
 - Security and responsible disclosure
 - Contributor roles
   - Backend and ML contributors
   - Frontend contributors
   - DevOps contributors (detailed)
+- Support matrix
+- Using Architectural Decision Records (ADRs)
 - Troubleshooting
 
 ---
@@ -58,6 +64,8 @@ The backend runs on http://localhost:5000.
 - Ensure pre-commit checks pass locally before pushing.
 - Add or update tests for new behavior.
 - Update documentation when behavior or interfaces change.
+- Prefer Conventional Commits for commit messages (e.g., feat:, fix:, docs:, chore:, refactor:, test:, perf:, ci:).
+- Sign-off commits if your organization requires DCO: git commit -s -m "feat: message"
 
 ## Testing
 
@@ -73,6 +81,8 @@ The backend runs on http://localhost:5000.
   - make fmt  # black + isort
   - make lint # flake8
 - Keep functions small and focused; favor readability over cleverness.
+- Prefer pure functions where possible and avoid global mutable state.
+- Document non-obvious behavior with short, meaningful comments rather than verbose docstrings.
 
 ## Commit messages and branching
 
@@ -85,12 +95,59 @@ The backend runs on http://localhost:5000.
   - type(scope): concise message
   - Examples: feat(backend): add websocket handler; fix(ci): pin action version
 - Reference issues with “Fixes #123” or “Refs #123” in the PR description.
+- For multi-commit PRs, squash-merge is preferred to keep history tidy (unless there’s value in preserving granular commits).
+
+## Pull request process and review checklist
+
+- Open PRs early as “Draft” to get feedback.
+- Ensure the following before requesting review:
+  - Code compiles and runs locally
+  - pre-commit passes (black, isort, flake8, whitespace)
+  - Tests are added/updated and pass locally: make test
+  - README/docs updated for user-facing changes
+  - No secrets or credentials included
+  - Backwards compatibility considered (note any breaking changes)
+- Reviewer checklist (maintainers):
+  - Clear purpose and scope
+  - Tests adequately cover new/changed behavior
+  - Performance impact is acceptable
+  - Security implications considered
+  - Documentation updated
+  - Small, atomic commits or a clean squashed history
+
+## Documentation style
+
+- Keep docs concise and task-oriented.
+- Update README.md for high-level changes; add deeper runbooks or ADRs under docs/.
+- Use plain English, short sentences, and active voice.
+- Include example commands, expected outputs, and rollback instructions for ops docs.
+
+## Performance and scalability guidelines
+
+- Avoid O(n^2) operations on unbounded data; stream or window where possible.
+- Keep packet-processing paths efficient; batch work and minimize per-packet overhead.
+- Add caching only when measured; remove dead caches.
+- Use profiling to justify optimizations and include results in PR description when relevant.
+
+## Dependency management policy
+
+- Prefer standard library and existing dependencies before adding new ones.
+- New dependencies must be:
+  - Actively maintained and reasonably popular
+  - Compatible with our license (MIT) and Python 3.11
+  - Pinned in requirements.txt with minimal version if necessary
+- Remove unused dependencies when discovered.
 
 ## Versioning and releases
 
 - Version is tracked in the top-level VERSION file.
 - Use semantic versioning (MAJOR.MINOR.PATCH).
 - For PRs that change the user-facing behavior or API, propose a version bump in the PR description.
+- Release process (maintainers):
+  - Update VERSION
+  - Update CHANGELOG (if maintained)
+  - Tag the commit: git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push --tags
+  - Build and push images to the registry (see DevOps: CI/CD)
 
 ## Security and responsible disclosure
 
@@ -100,6 +157,7 @@ The backend runs on http://localhost:5000.
   - Email the maintainers or use the private security contact channel if provided.
   - Provide steps to reproduce, affected versions, and suggested mitigations.
 - Avoid enabling privileged container capabilities by default.
+- See SECURITY.md for detailed reporting and patch timelines.
 
 ## Contributor roles
 
@@ -201,6 +259,23 @@ DevOps work helps ensure the project is reproducible, observable, secure, and ea
 10) Quality gates
 - PRs should pass: black, isort, flake8, pytest.
 - Prefer introducing new checks via pre-commit config so they run locally and in CI.
+
+## Support matrix
+
+- Python: 3.11 (primary)
+- OS (dev): Linux, macOS; Windows via WSL recommended
+- Browsers: latest Chrome/Firefox; recent Safari/Edge
+- Container runtime: Docker Engine 24+ or compatible
+
+If you add platform-specific features, provide a graceful fallback and document any limitations.
+
+## Using Architectural Decision Records (ADRs)
+
+- When introducing impactful architectural changes (new components, protocols, storage, deployment models), create an ADR in docs/adr/:
+  - Naming: docs/adr/NNN-short-title.md
+  - Content: context, decision, alternatives considered, consequences
+- Keep ADRs short and focused; link them from PR descriptions.
+- If superseding a previous ADR, state it clearly.
 
 ## Troubleshooting
 
