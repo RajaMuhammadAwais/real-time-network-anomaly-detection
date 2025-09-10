@@ -656,4 +656,5 @@ if __name__ == "__main__":
     # Get statistics
     stats = detector.get_botnet_statistics()
     print("Botnet statistics:", stats)
+# End of file
 
