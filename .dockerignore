@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info
+.venv/
+venv/
+.env
+.env.*
+
+# Git
+.git
+.gitignore
+
+# OS
+.DS_Store
+
+# Build/test artifacts
+.coverage
+htmlcov/
+dist/
+build/
+
+# Data/logs
+logs/
+*.pcap
+*.pcapng
