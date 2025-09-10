@@ -367,4 +367,5 @@ if __name__ == "__main__":
     test_sequence = detector._generate_attack_sequence('dos')
     result = detector.predict_sequence(test_sequence)
     print("Prediction result:", result)
+# End of file
 
