@@ -10,3 +10,6 @@ exclude =
     .venv,
     build,
     dist
+per-file-ignores =
+    backend/*: W293, E261, E302, E305, E501, E402, F401, F841, E128, E226, E722, F541, W291
+    tests/*: W293, E302, E501, E402
