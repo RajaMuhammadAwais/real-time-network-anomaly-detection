@@ -1,289 +1,94 @@
-# Contributing Guide
+# Contributing to Network Traffic Anomaly Detection
 
-Thank you for your interest in contributing! This project brings together networking, machine learning, and a modern web UI. This guide explains how we work, how to get set up locally, and specific guidance for different contributor roles — including a dedicated section for DevOps engineers.
+Thank you for taking the time to contribute. This guide explains how to get a development environment running, our coding standards, and how to submit changes.
 
-- Project language/runtime: Python 3.11
-- Style and tooling: black, isort, flake8, pre-commit
-- Packaging: requirements.txt
-- Orchestration: docker-compose
-- Make targets: see Makefile
-- CI: via pre-commit hooks locally (you can mirror these in your CI system)
+- Project overview: see README.md
+- Developer guide: see Makefile targets below
+- Code of Conduct: see CODE_OF_CONDUCT.md
 
-If anything is unclear, open an issue and we’ll help. Please also review our [Code of Conduct](CODE_OF_CONDUCT.md) and [Security Policy](SECURITY.md) before contributing.
+## Quick start
 
-## Table of contents
+1) Fork and clone
+- Fork the repository on GitHub
+- Clone your fork and add the upstream remote
 
-- Getting started
-- Development workflow
-- Testing
-- Code style and formatting
-- Commit messages and branching
-- Pull request process and review checklist
-- Documentation style
-- Performance and scalability guidelines
-- Dependency management policy
-- Versioning and releases
-- Security and responsible disclosure
-- Contributor roles
-  - Backend and ML contributors
-  - Frontend contributors
-  - DevOps contributors (detailed)
-- Support matrix
-- Using Architectural Decision Records (ADRs)
-- Troubleshooting
+2) Create a branch
+- Use a descriptive branch name:
+  - feat/<short-name> for features
+  - fix/<short-name> for bug fixes
+  - chore/<short-name> for maintenance
+  - docs/<short-name> for documentation
 
----
+3) Set up environment
+- Python 3.11 is required
+- Create venv and install dependencies:
+  - make install
+- Install pre-commit hooks:
+  - make pre-commit
 
-## Getting started
+4) Run locally
+- Basic app: make run (backend/app.py)
+- Enhanced app: make run-enhanced (backend/enhanced_app.py)
+- Docker (optional): docker compose up --build
 
-1) Fork and clone the repository
-2) Python and tooling
-   - Use Python 3.11
-   - Create a virtual environment:
-     - make venv
-     - make install
-   - Install pre-commit hooks:
-     - make pre-commit
-3) Verify setup
-   - Code style/lint: make fmt && make lint
-   - Tests: make test
-   - Run locally:
-     - make run (basic) or
-     - make run-enhanced (enhanced backend)
-
-Alternatively, you can use Docker:
-
-- docker compose up --build
-
-The backend runs on http://localhost:5000.
+5) Validate before pushing
+- Format: make fmt
+- Lint: make lint
+- Tests: make test
+- Ensure all GitHub Actions checks pass on your PR
 
 ## Development workflow
 
-- Create a feature branch from main, e.g., feature/my-change or fix/issue-123.
-- Keep pull requests small and focused; prefer several small PRs over one large one.
-- Ensure pre-commit checks pass locally before pushing.
-- Add or update tests for new behavior.
-- Update documentation when behavior or interfaces change.
-- Prefer Conventional Commits for commit messages (e.g., feat:, fix:, docs:, chore:, refactor:, test:, perf:, ci:).
-- Sign-off commits if your organization requires DCO: git commit -s -m "feat: message"
+- Edit code in small, focused commits
+- Keep existing style, imports, and comments intact where possible
+- Write tests for new behavior when applicable (tests/ directory)
+- Update README.md or docs/ for user-facing changes
 
-## Testing
+Makefile shortcuts:
+- make install        Create venv and install dependencies
+- make fmt            Run black and isort
+- make lint           Run flake8
+- make test           Run pytest
+- make run            Start Flask app
+- make run-enhanced   Start enhanced app
+- make docker-up      Start via docker-compose
+- make docker-down    Stop containers
 
-- Unit tests live under tests/.
-- Run the full suite locally: make test
-- Keep tests deterministic and fast. Prefer realistic but minimal fixtures.
-- If adding external integrations, mock network and OS interactions.
+## Coding standards
 
-## Code style and formatting
+- Language: Python 3.11
+- Style: black + isort + flake8 (max line length 100)
+- Avoid broad try/except; prefer explicit error handling
+- Keep functions small and readable; add minimal, meaningful comments only when necessary
+- Follow existing patterns in the codebase
 
-- black, isort, and flake8 are enforced via pre-commit.
-- Run:
-  - make fmt  # black + isort
-  - make lint # flake8
-- Keep functions small and focused; favor readability over cleverness.
-- Prefer pure functions where possible and avoid global mutable state.
-- Document non-obvious behavior with short, meaningful comments rather than verbose docstrings.
+Commit messages (Conventional Commits):
+- feat: add LSTM detector threshold configuration
+- fix: handle empty dataframe in feature extractor
+- chore: update CI caching for pip
+- docs: add deployment instructions
 
-## Commit messages and branching
+## Pull requests
 
-- Branch naming:
-  - feature/short-description
-  - fix/short-description
-  - chore/short-description
-  - docs/short-description
-- Commit convention (recommended):
-  - type(scope): concise message
-  - Examples: feat(backend): add websocket handler; fix(ci): pin action version
-- Reference issues with “Fixes #123” or “Refs #123” in the PR description.
-- For multi-commit PRs, squash-merge is preferred to keep history tidy (unless there’s value in preserving granular commits).
+- Use the PR template; fill all required sections
+- Ensure CI (lint/test/build) passes
+- Link related issues (e.g., Closes #123)
+- Provide screenshots or logs for UI/behavioral changes
+- Keep PRs focused; prefer multiple small PRs over one large PR
+- Be responsive to review feedback
 
-## Pull request process and review checklist
+## Contributor License Agreement (CLA)
 
-- Open PRs early as “Draft” to get feedback.
-- Ensure the following before requesting review:
-  - Code compiles and runs locally
-  - pre-commit passes (black, isort, flake8, whitespace)
-  - Tests are added/updated and pass locally: make test
-  - README/docs updated for user-facing changes
-  - No secrets or credentials included
-  - Backwards compatibility considered (note any breaking changes)
-- Reviewer checklist (maintainers):
-  - Clear purpose and scope
-  - Tests adequately cover new/changed behavior
-  - Performance impact is acceptable
-  - Security implications considered
-  - Documentation updated
-  - Small, atomic commits or a clean squashed history
+First-time contributors will be asked by the CLA Assistant bot (in the PR) to sign a Contributor License Agreement electronically. This is required before a PR can be merged.
 
-## Documentation style
+## Security
 
-- Keep docs concise and task-oriented.
-- Update README.md for high-level changes; add deeper runbooks or ADRs under docs/.
-- Use plain English, short sentences, and active voice.
-- Include example commands, expected outputs, and rollback instructions for ops docs.
+Please do not open public issues for security vulnerabilities. See SECURITY.md for private disclosure instructions.
 
-## Performance and scalability guidelines
+## Questions and support
 
-- Avoid O(n^2) operations on unbounded data; stream or window where possible.
-- Keep packet-processing paths efficient; batch work and minimize per-packet overhead.
-- Add caching only when measured; remove dead caches.
-- Use profiling to justify optimizations and include results in PR description when relevant.
+- Use GitHub Issues for bugs and feature requests
+- For design/architecture discussions, open a discussion in an issue before large changes
+- Be professional and respectful in all interactions
 
-## Dependency management policy
-
-- Prefer standard library and existing dependencies before adding new ones.
-- New dependencies must be:
-  - Actively maintained and reasonably popular
-  - Compatible with our license (MIT) and Python 3.11
-  - Pinned in requirements.txt with minimal version if necessary
-- Remove unused dependencies when discovered.
-
-## Versioning and releases
-
-- Version is tracked in the top-level VERSION file.
-- Use semantic versioning (MAJOR.MINOR.PATCH).
-- For PRs that change the user-facing behavior or API, propose a version bump in the PR description.
-- Release process (maintainers):
-  - Update VERSION
-  - Update CHANGELOG (if maintained)
-  - Tag the commit: git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push --tags
-  - Build and push images to the registry (see DevOps: CI/CD)
-
-## Security and responsible disclosure
-
-- Do not include secrets in code, config, or commit history.
-- If you discover a vulnerability:
-  - Do not open a public issue.
-  - Email the maintainers or use the private security contact channel if provided.
-  - Provide steps to reproduce, affected versions, and suggested mitigations.
-- Avoid enabling privileged container capabilities by default.
-- See SECURITY.md for detailed reporting and patch timelines.
-
-## Contributor roles
-
-### Backend and ML contributors
-
-- Follow the data model and feature engineering approach described in README.md.
-- Keep long-running operations off the main request path; use background tasks where appropriate.
-- If you change model parameters or feature extraction logic, update docs and tests accordingly.
-
-### Frontend contributors
-
-- Keep the dashboard performant; batch updates instead of frequent granular DOM changes.
-- Prefer accessible, responsive design.
-- Coordinate API changes with backend contributors.
-
-### DevOps contributors (detailed)
-
-DevOps work helps ensure the project is reproducible, observable, secure, and easy to deploy.
-
-1) Local developer experience
-- Makefile:
-  - venv: create virtualenv
-  - install: install Python deps
-  - fmt / lint / test: local quality gates
-  - run / run-enhanced: start backend variants
-  - docker-build / docker-up / docker-down: container orchestration helpers
-- Keep Make targets idempotent and fast. If you add new common tasks, add a Make target and document it in ‘make help’.
-
-2) Containers and Compose
-- Docker build:
-  - docker compose up --build to run locally
-  - Compose file: docker-compose.yml
-    - Builds backend from backend/Dockerfile
-    - Exposes 5000
-    - Mounts ./logs into container /app/logs
-    - Optional capabilities for real packet capture are commented out; avoid enabling by default.
-- Backend Dockerfile should:
-  - Pin a Python base image (e.g., python:3.11-slim)
-  - Install only required dependencies
-  - Run as non-root where practical
-  - Use PYTHONUNBUFFERED=1 and a sensible working directory
-
-3) Pre-commit and linting
-- Hooks live in .pre-commit-config.yaml
-  - black@24.8.0, isort, flake8, end-of-file-fixer, trailing-whitespace
-- Ensure CI mirrors these checks for consistent results.
-- Typical CI steps:
-  - Setup Python 3.11
-  - pip install -r requirements.txt
-  - pip install pre-commit
-  - pre-commit run --all-files
-  - pytest -q
-
-4) Observability
-- Application logs are written to stdout; docker-compose mounts ./logs for persistence if needed.
-- Consider wiring a structured logging format (JSON) if adding centralized logging.
-- For metrics, propose a minimal, optional integration (e.g., Prometheus exporter) but keep it off-by-default.
-
-5) Security and hardening
-- Network capture typically requires elevated privileges; do not grant NET_ADMIN or NET_RAW by default.
-- If enabling packet capture in containers, document risks and scope the permissions to the minimum needed.
-- Prefer running containers as a non-root user.
-- Validate inputs on exposed endpoints and rate-limit if you add new public-facing routes.
-- For production:
-  - Use a reverse proxy (nginx) with TLS termination
-  - Restrict inbound ports in security groups/firewalls
-  - Configure health checks and resource limits
-
-6) Configuration and secrets
-- Use environment variables for config; provide sane defaults for local dev.
-- Do not commit secrets. Prefer a secret manager (e.g., AWS Secrets Manager, Vault) in production.
-- Document any new env vars in README.md and docker-compose.yml.
-
-7) CI/CD (example outline)
-- Build-and-test job on push and PR:
-  - Lint: pre-commit run --all-files
-  - Test: pytest -q
-  - Build: docker build -f backend/Dockerfile .
-- Release job (on tag):
-  - Read VERSION
-  - Build and tag the image (e.g., ghcr.io/OWNER/REPO:VERSION)
-  - Push image to registry
-- Keep actions pinned to exact SHAs or version tags.
-
-8) Environments
-- Local: docker compose up or make run
-- Staging/Prod (example approach):
-  - Immutable images pushed to a registry
-  - IaC (Terraform, Pulumi) to provision infra (out of scope here but welcome as separate PRs)
-  - Deployment via GitOps (Argo CD/Flux) or a simple workflow if the stack is small
-  - Blue/green or rolling update strategy
-  - Centralized logs and metrics
-
-9) Documentation
-- Update README.md sections when changing runtime, ports, or interfaces.
-- Add docs under docs/ for deeper operational runbooks (e.g., scaling, TLS, reverse proxy config).
-- Keep docker-compose.yml comments accurate when toggling capabilities.
-
-10) Quality gates
-- PRs should pass: black, isort, flake8, pytest.
-- Prefer introducing new checks via pre-commit config so they run locally and in CI.
-
-## Support matrix
-
-- Python: 3.11 (primary)
-- OS (dev): Linux, macOS; Windows via WSL recommended
-- Browsers: latest Chrome/Firefox; recent Safari/Edge
-- Container runtime: Docker Engine 24+ or compatible
-
-If you add platform-specific features, provide a graceful fallback and document any limitations.
-
-## Using Architectural Decision Records (ADRs)
-
-- When introducing impactful architectural changes (new components, protocols, storage, deployment models), create an ADR in docs/adr/:
-  - Naming: docs/adr/NNN-short-title.md
-  - Content: context, decision, alternatives considered, consequences
-- Keep ADRs short and focused; link them from PR descriptions.
-- If superseding a previous ADR, state it clearly.
-
-## Troubleshooting
-
-- Virtualenv issues: remove venv and re-run make venv && make install
-- Docker build cache issues: docker builder prune -f
-- Port collisions: lsof -i :5000; kill -9 <PID>
-- Packet capture permissions: running locally may require sudo; prefer host networking for testing rather than privileged containers.
-
----
-
-By contributing, you agree that your contributions will be licensed under the project’s MIT License.
+Thank you for contributing!
