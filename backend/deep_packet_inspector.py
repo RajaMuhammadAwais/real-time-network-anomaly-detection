@@ -10,6 +10,7 @@ import logging
 from datetime import datetime
 import dpkt
 import socket
+import math
 
 logger = logging.getLogger(__name__)
 
@@ -187,13 +188,13 @@ class DeepPacketInspector:
             for byte in data:
                 byte_counts[byte] = byte_counts.get(byte, 0) + 1
             
-            # Calculate entropy
-            entropy = 0
+            # Calculate entropy using Shannon entropy
+            entropy = 0.0
             data_len = len(data)
             for count in byte_counts.values():
                 probability = count / data_len
                 if probability > 0:
-                    entropy -= probability * (probability.bit_length() - 1)
+                    entropy -= probability * math.log2(probability)
             
             return entropy
             

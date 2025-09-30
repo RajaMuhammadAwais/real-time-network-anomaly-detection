@@ -10,6 +10,8 @@ import threading
 import time
 import sys
 from datetime import datetime, timedelta
+import numpy as np
+import pandas as pd
 from flask import Flask, render_template, jsonify, request, send_from_directory
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
@@ -133,20 +135,37 @@ class EnhancedNetworkMonitor:
                     if packet_data:
                         self.packet_count += 1
                         
-                        # Extract features
-                        features = feature_extractor.extract_features(packet_data)
+                        # Extract features using existing FeatureExtractor APIs
+                        # Convert packet_data to a one-row DataFrame with expected columns
+                        proto_map = {'TCP': 6, 'UDP': 17, 'ICMP': 1}
+                        packet_df = pd.DataFrame([{
+                            'timestamp': packet_data.get('timestamp', datetime.now()),
+                            'src_ip': packet_data.get('src_ip'),
+                            'dst_ip': packet_data.get('dst_ip'),
+                            'protocol': proto_map.get(packet_data.get('protocol', 'TCP'), 6),
+                            'packet_size': packet_data.get('packet_size', packet_data.get('size', 0)),
+                            'src_port': packet_data.get('src_port'),
+                            'dst_port': packet_data.get('dst_port'),
+                            'flags': packet_data.get('flags', '')
+                        }])
+                        
+                        features = feature_extractor.extract_all_features(packet_df)
+                        feature_vector = feature_extractor.create_feature_vector(features)
                         
                         # Traditional anomaly detection
-                        anomaly_result = anomaly_detector.detect_anomaly(features)
+                        anomaly_result = anomaly_detector.predict(feature_vector)
                         
                         # Deep packet inspection
                         dpi_result = dpi_inspector.inspect_packet(packet_data)
                         
-                        # Botnet detection
-                        botnet_result = botnet_detector.analyze_communication(packet_data)
+                        # Botnet detection (ensure packet_size is available)
+                        packet_data_for_botnet = dict(packet_data)
+                        if 'packet_size' not in packet_data_for_botnet:
+                            packet_data_for_botnet['packet_size'] = packet_data_for_botnet.get('size', 0)
+                        botnet_result = botnet_detector.analyze_communication(packet_data_for_botnet)
                         
                         # Build sequence for LSTM
-                        sequence_buffer.append(features)
+                        sequence_buffer.append(feature_vector.tolist())
                         if len(sequence_buffer) > SEQUENCE_LENGTH:
                             sequence_buffer.pop(0)
                         
@@ -186,7 +205,7 @@ class EnhancedNetworkMonitor:
                             'src_ip': packet_data.get('src_ip'),
                             'dst_ip': packet_data.get('dst_ip'),
                             'protocol': packet_data.get('protocol'),
-                            'size': packet_data.get('size', 0),
+                            'packet_size': packet_data.get('packet_size', packet_data.get('size', 0)),
                             'threat_score': combined_analysis.get('threat_score', 0),
                             'attack_type': combined_analysis.get('attack_type', 'normal')
                         })
@@ -225,7 +244,7 @@ class EnhancedNetworkMonitor:
                 'src_port': random.randint(1024, 65535),
                 'dst_port': random.choice([80, 443, 22, 21, 25]),
                 'protocol': random.choice(['TCP', 'UDP']),
-                'size': random.randint(64, 1500),
+                'packet_size': random.randint(64, 1500),
                 'flags': random.choice(['SYN', 'ACK', 'PSH', 'FIN']),
                 'payload': b'normal web traffic data'
             }
@@ -237,7 +256,7 @@ class EnhancedNetworkMonitor:
                 'src_port': random.randint(1024, 65535),
                 'dst_port': 80,
                 'protocol': 'TCP',
-                'size': 64,  # Small packets
+                'packet_size': 64,  # Small packets
                 'flags': 'SYN',
                 'payload': b'SYN flood attack'
             }
@@ -249,7 +268,7 @@ class EnhancedNetworkMonitor:
                 'src_port': random.randint(1024, 65535),
                 'dst_port': 80,
                 'protocol': 'TCP',
-                'size': random.randint(800, 1200),
+                'packet_size': random.randint(800, 1200),
                 'flags': 'PSH',
                 'payload': b"GET /login.php?id=1' OR '1'='1 HTTP/1.1"
             }
@@ -261,7 +280,7 @@ class EnhancedNetworkMonitor:
                 'src_port': random.randint(1024, 65535),
                 'dst_port': random.choice([8080, 8443, 1337, 31337]),
                 'protocol': 'TCP',
-                'size': random.randint(100, 300),
+                'packet_size': random.randint(100, 300),
                 'flags': 'PSH',
                 'payload': b'beacon checkin data'
             }
@@ -274,7 +293,7 @@ class EnhancedNetworkMonitor:
                 'src_port': random.randint(1024, 65535),
                 'dst_port': random.randint(1, 65535),
                 'protocol': random.choice(['TCP', 'UDP']),
-                'size': random.randint(64, 1500),
+                'packet_size': random.randint(64, 1500),
                 'flags': random.choice(['SYN', 'ACK', 'PSH', 'FIN']),
                 'payload': f'{packet_type} attack payload'.encode()
             }
@@ -473,6 +492,18 @@ def get_status():
     }
     
     return jsonify(status)
+
+@app.route('/api/train_model', methods=['POST'])
+def train_models():
+    """Trigger retraining of ML models (IsolationForest and LSTM)"""
+    try:
+        anomaly_detector.train_model()  # retrain IsolationForest
+        # Retrain LSTM with fewer epochs to keep response reasonable
+        lstm_detector.train_model(epochs=10, batch_size=32)
+        return jsonify({'status': 'success', 'message': 'Models retrained successfully'})
+    except Exception as e:
+        logger.error(f"Error retraining models: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 # Threat Hunting API Routes
 @app.route('/api/threat_hunting/search', methods=['POST'])
