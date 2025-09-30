@@ -1,5 +1,14 @@
 // Threat Hunting Interface JavaScript
 
+// Runtime config for local/dev setups where frontend and backend may be on different ports.
+// Use URL params ?apiBase=http://localhost:5000 or set localStorage.apiBase.
+const RuntimeConfig = (() => {
+    const url = new URL(window.location.href);
+    const apiBase = url.searchParams.get('apiBase') || localStorage.getItem('apiBase') || '';
+    const withBase = (path) => (apiBase ? `${apiBase}${path}` : path);
+    return { apiBase, withBase };
+})();
+
 class ThreatHuntingInterface {
     constructor() {
         this.currentPage = 1;
@@ -117,7 +126,7 @@ class ThreatHuntingInterface {
         try {
             const filters = this.getSearchFilters();
             
-            const response = await fetch('/api/threat_hunting/search', {
+            const response = await fetch(RuntimeConfig.withBase('/api/threat_hunting/search'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -228,7 +237,7 @@ class ThreatHuntingInterface {
     
     async showEventDetails(eventId) {
         try {
-            const response = await fetch(`/api/threat_hunting/event/${eventId}`);
+            const response = await fetch(RuntimeConfig.withBase(`/api/threat_hunting/event/${eventId}`));
             if (response.ok) {
                 const event = await response.json();
                 this.displayEventModal(event);
@@ -317,7 +326,7 @@ class ThreatHuntingInterface {
         this.showLoading(true);
         
         try {
-            const response = await fetch('/api/threat_hunting/check_ioc', {
+            const response = await fetch(RuntimeConfig.withBase('/api/threat_hunting/check_ioc'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -401,7 +410,7 @@ class ThreatHuntingInterface {
     async loadAlerts() {
         try {
             const showInvestigated = document.getElementById('show-investigated').checked;
-            const response = await fetch(`/api/threat_hunting/alerts?investigated=${showInvestigated}`);
+            const response = await fetch(RuntimeConfig.withBase(`/api/threat_hunting/alerts?investigated=${showInvestigated}`));
             
             if (response.ok) {
                 const alerts = await response.json();
@@ -440,7 +449,7 @@ class ThreatHuntingInterface {
     
     async loadThreatIntelStats() {
         try {
-            const response = await fetch('/api/threat_hunting/intel_stats');
+            const response = await fetch(RuntimeConfig.withBase('/api/threat_hunting/intel_stats'));
             if (response.ok) {
                 const stats = await response.json();
                 this.displayThreatIntelStats(stats);
@@ -465,7 +474,7 @@ class ThreatHuntingInterface {
         this.showLoading(true);
         
         try {
-            const response = await fetch('/api/threat_hunting/update_intel', {
+            const response = await fetch(RuntimeConfig.withBase('/api/threat_hunting/update_intel'), {
                 method: 'POST'
             });
             

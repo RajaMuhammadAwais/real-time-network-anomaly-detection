@@ -1,5 +1,18 @@
 // Network Traffic Anomaly Detection Dashboard JavaScript
 
+// Simple runtime config to make local development work when frontend and backend run on different ports.
+// You can set ?apiBase=http://localhost:5000&socketUrl=http://localhost:5000 in the URL,
+// or set localStorage.apiBase / localStorage.socketUrl.
+const RuntimeConfig = (() => {
+    const url = new URL(window.location.href);
+    const apiBase = url.searchParams.get('apiBase') || localStorage.getItem('apiBase') || '';
+    const socketUrl = url.searchParams.get('socketUrl') || localStorage.getItem('socketUrl') || '';
+    const base = apiBase || '';
+    const sock = socketUrl || '';
+    const withBase = (path) => (base ? `${base}${path}` : path);
+    return { apiBase: base, socketUrl: sock, withBase };
+})();
+
 class NetworkDashboard {
     constructor() {
         this.socket = null;
@@ -19,7 +32,12 @@ class NetworkDashboard {
     }
     
     initializeSocketIO() {
-        this.socket = io();
+        try {
+            this.socket = RuntimeConfig.socketUrl ? io(RuntimeConfig.socketUrl) : io();
+        } catch (e) {
+            this.showNotification('Socket connection failed. Ensure backend is running.', 'error');
+            return;
+        }
         
         this.socket.on('connect', () => {
             this.isConnected = true;
@@ -161,14 +179,14 @@ class NetworkDashboard {
     
     bindEventListeners() {
         // Start monitoring button
-document.getElementById('start-monitoring').addEventListener('click', () => {
-    this.startMonitoring();
-});
+        document.getElementById('start-monitoring').addEventListener('click', () => {
+            this.startMonitoring();
+        });
 
-// Stop monitoring button
-document.getElementById('stop-monitoring').addEventListener('click', () => {
-    this.stopMonitoring();
-});
+        // Stop monitoring button
+        document.getElementById('stop-monitoring').addEventListener('click', () => {
+            this.stopMonitoring();
+        });
         
         // Retrain model button
         document.getElementById('retrain-model').addEventListener('click', () => {
@@ -181,7 +199,7 @@ document.getElementById('stop-monitoring').addEventListener('click', () => {
         this.showLoading(true);
         
         try {
-            const response = await fetch('/api/start_monitoring', {
+            const response = await fetch(RuntimeConfig.withBase('/api/start_monitoring'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -210,7 +228,7 @@ document.getElementById('stop-monitoring').addEventListener('click', () => {
         this.showLoading(true);
         
         try {
-            const response = await fetch('/api/stop_monitoring', {
+            const response = await fetch(RuntimeConfig.withBase('/api/stop_monitoring'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -238,7 +256,7 @@ document.getElementById('stop-monitoring').addEventListener('click', () => {
         this.showLoading(true);
         
         try {
-            const response = await fetch('/api/train_model', {
+            const response = await fetch(RuntimeConfig.withBase('/api/train_model'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -453,7 +471,7 @@ document.getElementById('stop-monitoring').addEventListener('click', () => {
     
     async updateStatus() {
         try {
-            const response = await fetch('/api/status');
+            const response = await fetch(RuntimeConfig.withBase('/api/status'));
             const data = await response.json();
             // Normalize enhanced_app.py status payload
             if (data && data.stats) {
@@ -494,6 +512,7 @@ document.getElementById('stop-monitoring').addEventListener('click', () => {
             }
         } catch (error) {
             console.error('Error fetching status:', error);
+            this.showNotification('Backend not reachable. Set apiBase parameter or start backend.', 'error');
         }
     }
 }
