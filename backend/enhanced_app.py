@@ -493,6 +493,18 @@ def get_status():
     
     return jsonify(status)
 
+@app.route('/api/train_model', methods=['POST'])
+def train_models():
+    """Trigger retraining of ML models (IsolationForest and LSTM)"""
+    try:
+        anomaly_detector.train_model()  # retrain IsolationForest
+        # Retrain LSTM with fewer epochs to keep response reasonable
+        lstm_detector.train_model(epochs=10, batch_size=32)
+        return jsonify({'status': 'success', 'message': 'Models retrained successfully'})
+    except Exception as e:
+        logger.error(f"Error retraining models: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 # Threat Hunting API Routes
 @app.route('/api/threat_hunting/search', methods=['POST'])
 def threat_hunting_search():

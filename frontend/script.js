@@ -51,7 +51,7 @@ class NetworkDashboard {
                     total_packets: data.stats?.total_packets || 0,
                     unique_src_ips: Object.keys(data.stats?.top_sources || {}).length,
                     unique_dst_ips: Object.keys(data.stats?.top_destinations || {}).length,
-                    avg_packet_size: data.packet_data?.size || 0,
+                    avg_packet_size: data.packet_data?.packet_size || data.packet_data?.size || 0,
                     total_traffic: 0, // not tracked; leave 0
                     protocols: {
                         '6': data.stats?.protocols?.TCP || 0,  // TCP
@@ -161,14 +161,14 @@ class NetworkDashboard {
     
     bindEventListeners() {
         // Start monitoring button
-        document.getElementById('start-monitoring').addEventListener('click', () => {
-            this.startMonitoring();
-        });
-        
-        // Stop monitoring button
-        document.getElementById('stop-monitoring').addEventListener('click', () => {
-            this.stopMonitoring();
-        });
+document.getElementById('start-monitoring').addEventListener('click', () => {
+    this.startMonitoring();
+});
+
+// Stop monitoring button
+document.getElementById('stop-monitoring').addEventListener('click', () => {
+    this.stopMonitoring();
+});
         
         // Retrain model button
         document.getElementById('retrain-model').addEventListener('click', () => {
@@ -191,12 +191,12 @@ class NetworkDashboard {
             
             const result = await response.json();
             
-            if (result.success) {
-                this.showNotification(result.message, 'success');
+            if ((result.status || '').toLowerCase() === 'success') {
+                this.showNotification(result.message || 'Monitoring started', 'success');
                 this.isMonitoring = true;
                 this.updateButtonStates();
             } else {
-                this.showNotification(result.message, 'error');
+                this.showNotification(result.message || 'Failed to start monitoring', 'error');
             }
         } catch (error) {
             this.showNotification('Error starting monitoring', 'error');
@@ -219,12 +219,12 @@ class NetworkDashboard {
             
             const result = await response.json();
             
-            if (result.success) {
-                this.showNotification(result.message, 'success');
+            if ((result.status || '').toLowerCase() === 'success') {
+                this.showNotification(result.message || 'Monitoring stopped', 'success');
                 this.isMonitoring = false;
                 this.updateButtonStates();
             } else {
-                this.showNotification(result.message, 'error');
+                this.showNotification(result.message || 'Failed to stop monitoring', 'error');
             }
         } catch (error) {
             this.showNotification('Error stopping monitoring', 'error');
@@ -247,10 +247,10 @@ class NetworkDashboard {
             
             const result = await response.json();
             
-            if (result.success) {
-                this.showNotification(result.message, 'success');
+            if ((result.status || '').toLowerCase() === 'success') {
+                this.showNotification(result.message || 'Models retrained', 'success');
             } else {
-                this.showNotification(result.message, 'error');
+                this.showNotification(result.message || 'Failed to retrain models', 'error');
             }
         } catch (error) {
             this.showNotification('Error retraining model', 'error');
