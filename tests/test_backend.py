@@ -209,7 +209,6 @@ if __name__ == '__main__':
     print(f"Tests run: {result.testsRun}")
     print(f"Failures: {len(result.failures)}")
     print(f"Errors: {len(result.errors)}")
-  cosine/fix/flake8-warnings-u5qs06
     total_passed = result.testsRun - len(result.failures) - len(result.errors)
     success_pct = (total_passed / result.testsRun * 100) if result.testsRun else 0.0
     print(f"Success rate: {success_pct:.1f}%")
