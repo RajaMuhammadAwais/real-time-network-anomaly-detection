@@ -178,6 +178,62 @@ WebSocket:
 - LSTM is trained on startup if not already trained (lightweight demo config)
 - Packet/alert buffers are size-limited to avoid memory bloat
 
+## Machine Learning Algorithms Used
+
+- Isolation Forest (scikit-learn)
+  - Purpose: traditional anomaly detection over engineered features
+  - Usage: anomaly_detector.py predicts is_anomaly and anomaly_score
+  - Strengths: robust to outliers, no heavy training data requirement
+  - Limitations: less effective on complex temporal patterns without sequence context
+- LSTM-based Sequence Model (Keras/TensorFlow)
+  - Purpose: detect sequential attack patterns (e.g., slow port scans, beaconing)
+  - Usage: deep_learning_detector.py (LSTMAttackDetector) trains/predicts over sliding windows
+  - Input: feature vectors aggregated into sequences of length SEQUENCE_LENGTH
+  - Output: { is_attack, confidence, attack_type }
+- Deep Packet Inspection (rules/signatures)
+  - Purpose: payload/content-based indicators (SQLi strings, suspicious headers)
+  - Usage: deep_packet_inspector.py returns threats_detected with types and details
+  - Note: signature/rule-based, complementary to ML; not strictly a learning algorithm
+- Botnet Communication Heuristics
+  - Purpose: detect beaconing, unusual destinations/ports, low-and-slow patterns
+  - Usage: botnet_detector.py returns is_suspicious, threat_score, indicators
+  - Note: heuristic scoring acts like a lightweight model; pairs well with ML outputs
+- Feature Engineering
+  - Source: feature_extraction.py
+  - Examples: protocol counts/ratios, packet sizes, unique IP counts, temporal/spatial stats
+  - These features feed Isolation Forest and form the basis of LSTM sequences
+
+## Future Enhancements
+
+- Advanced Deep Learning
+  - Transformer-based time series models for long-range dependencies
+  - Temporal Convolutional Networks (TCN) for efficient sequence modeling
+  - Autoencoders/VAEs for unsupervised anomaly detection
+- Graph-Based Detection
+  - Graph neural networks (GNNs) over communication graphs (IP/port nodes, edges)
+  - Community detection for lateral movement and C2 patterns
+- Online/Continual Learning
+  - Incremental updates to Isolation Forest or streaming anomaly detectors
+  - Drift detection and adaptive thresholds
+- Semi-supervised and Weakly-supervised Methods
+  - Leverage small labeled sets + large unlabeled traffic
+  - Pseudo-labeling and consistency regularization
+- Threat Intelligence Integration
+  - Live feeds (MISP, Open Threat Intel) with scoring/fusion
+  - IOC enrichment and automated blocklists
+- Explainability and Analyst UX
+  - SHAP/feature importance for anomaly rationale
+  - Rich alert context: packet traces, related sessions, timelines
+- MLOps and Reproducibility
+  - Versioned datasets/models, experiment tracking
+  - Scheduled retraining, evaluation dashboards
+- Real Capture and Scale
+  - High-performance capture (DPDK/libpcap) and batching
+  - Distributed deployment, message bus (Kafka), and long-term storage
+- Integrations
+  - SIEM connectors, alert forwarding (email/Slack/Webhooks)
+  - Firewall/IDS orchestration hooks
+
 ## License
 
 MIT
