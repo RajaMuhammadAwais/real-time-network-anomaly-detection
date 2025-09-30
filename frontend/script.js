@@ -25,7 +25,7 @@ class NetworkDashboard {
             this.isConnected = true;
             this.updateConnectionStatus();
             this.showNotification('Connected to server', 'success');
-            this.socket.emit('request_status');
+            this.socket.emit('request_stats');
         });
         
         this.socket.on('disconnect', () => {
@@ -34,6 +34,47 @@ class NetworkDashboard {
             this.showNotification('Disconnected from server', 'error');
         });
         
+        // Support enhanced_app.py event names
+        this.socket.on('status', (data) => {
+            // Normalize payload for UI
+            this.updateMonitoringStatus({
+                is_monitoring: !!data.monitoring_active,
+                total_packets: data.stats?.total_packets || 0,
+                total_alerts: data.stats?.anomalies_detected || 0
+            });
+        });
+        
+        this.socket.on('packet_update', (data) => {
+            // Normalize packet_update payload to the expected shape
+            const normalized = {
+                stats: {
+                    total_packets: data.stats?.total_packets || 0,
+                    unique_src_ips: Object.keys(data.stats?.top_sources || {}).length,
+                    unique_dst_ips: Object.keys(data.stats?.top_destinations || {}).length,
+                    avg_packet_size: data.packet_data?.size || 0,
+                    total_traffic: 0, // not tracked; leave 0
+                    protocols: {
+                        '6': data.stats?.protocols?.TCP || 0,  // TCP
+                        '17': data.stats?.protocols?.UDP || 0, // UDP
+                        '1': data.stats?.protocols?.ICMP || 0  // ICMP
+                    },
+                    top_src_ips: data.stats?.top_sources || {}
+                },
+                features: {
+                    packet_count: data.stats?.total_packets || 0
+                },
+                prediction: {
+                    is_anomaly: !!data.analysis?.is_anomaly,
+                    confidence: data.analysis?.threat_score || 0
+                },
+                analysis: {
+                    severity: (data.stats?.threat_level || 'Low')
+                }
+            };
+            this.updateTrafficData(normalized);
+        });
+        
+        // Backward compatibility with older event names if used
         this.socket.on('status_update', (data) => {
             this.updateMonitoringStatus(data);
         });
@@ -44,7 +85,7 @@ class NetworkDashboard {
         
         this.socket.on('new_alert', (alert) => {
             this.addAlert(alert);
-            this.showNotification(`New Alert: ${alert.type}`, 'warning');
+            this.showNotification(`New Alert: ${alert.type || alert.alert_type || 'Alert'}`, 'warning');
         });
     }
     
@@ -414,7 +455,43 @@ class NetworkDashboard {
         try {
             const response = await fetch('/api/status');
             const data = await response.json();
-            this.updateMonitoringStatus(data);
+            // Normalize enhanced_app.py status payload
+            if (data && data.stats) {
+                this.updateMonitoringStatus({
+                    is_monitoring: !!data.monitoring_active,
+                    total_packets: data.stats?.total_packets || 0,
+                    total_alerts: data.stats?.anomalies_detected || 0
+                });
+                // Also push a synthetic traffic update to seed charts
+                const normalized = {
+                    stats: {
+                        total_packets: data.stats?.total_packets || 0,
+                        unique_src_ips: Object.keys(data.stats?.top_sources || {}).length,
+                        unique_dst_ips: Object.keys(data.stats?.top_destinations || {}).length,
+                        avg_packet_size: 0,
+                        total_traffic: 0,
+                        protocols: {
+                            '6': data.stats?.protocols?.TCP || 0,
+                            '17': data.stats?.protocols?.UDP || 0,
+                            '1': data.stats?.protocols?.ICMP || 0
+                        },
+                        top_src_ips: data.stats?.top_sources || {}
+                    },
+                    features: {
+                        packet_count: data.stats?.total_packets || 0
+                    },
+                    prediction: {
+                        is_anomaly: false,
+                        confidence: 0
+                    },
+                    analysis: {
+                        severity: (data.stats?.threat_level || 'Low')
+                    }
+                };
+                this.updateTrafficData(normalized);
+            } else {
+                this.updateMonitoringStatus(data);
+            }
         } catch (error) {
             console.error('Error fetching status:', error);
         }
